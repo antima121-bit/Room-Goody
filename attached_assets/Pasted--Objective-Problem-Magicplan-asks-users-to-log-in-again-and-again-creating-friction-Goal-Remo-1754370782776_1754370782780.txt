@@ -1,0 +1,104 @@
+✅ Objective
+Problem: Magicplan asks users to log in (again and again), creating friction.
+Goal: Remove or reduce this login friction as much as possible in your Android app.
+
+✅ Final Solution Structure
+✅ Step 1: Use a Single Shared Magicplan Account (For POC/MVP)
+Create one Magicplan account (e.g., yourapp.magicplan@gmail.com).
+
+Manually log in once into the Magicplan app installed on the user’s device.
+
+Ensure session is retained (Magicplan does this automatically).
+
+📌 This step is only needed once per device. Don’t log out from Magicplan manually.
+
+✅ Step 2: Use Deep Linking from Your App
+Magicplan supports custom URI schemes like magicplan://. You can use these links to:
+
+Open the app directly
+
+Open specific projects/scans (if projectId is available)
+
+✅ Step 3: Implement Deep Linking Trigger in Android App
+java
+Copy
+Edit
+// Launch Magicplan app with a deep link
+Intent intent = new Intent(Intent.ACTION_VIEW);
+intent.setData(Uri.parse("magicplan://projects")); // opens project list
+intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+try {
+    context.startActivity(intent);
+} catch (ActivityNotFoundException e) {
+    // Magicplan app is not installed
+    Toast.makeText(context, "Please install the Magicplan app to continue", Toast.LENGTH_LONG).show();
+    // Optional: redirect to Play Store
+}
+✅ Other examples of deep links:
+
+text
+Copy
+Edit
+magicplan://projects                         // opens list of projects
+magicplan://project?projectId=abc123         // opens a specific project
+magicplan://project/new                      // starts a new project
+✅ Step 4: Ensure Session Persistence (Magicplan handles this)
+Once logged in manually the first time:
+
+Session is stored by Magicplan.
+
+All future deep links open directly into the app — no login screen again.
+
+You can store a flag in SharedPreferences in your app:
+
+java
+Copy
+Edit
+SharedPreferences prefs = context.getSharedPreferences("magicplan_prefs", MODE_PRIVATE);
+prefs.edit().putBoolean("magicplan_logged_in", true).apply();
+✅ Step 5: (Optional) Show “One-Time Setup” Screen to User
+Before the first use, show a guided dialog:
+
+plaintext
+Copy
+Edit
+🛠️ One-Time Setup:
+To enable room scanning, please sign in to Magicplan app once.
+Don't worry — you won’t be asked again!
+
+[ Open Magicplan ] [ Cancel ]
+Use an Intent to open the app:
+
+java
+Copy
+Edit
+Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage("com.sensopia.magicplan");
+if (launchIntent != null) {
+    context.startActivity(launchIntent);
+} else {
+    // Redirect to Play Store if not installed
+}
+✅ Summary of What This Does
+Feature	Description
+✅ First login	Manual login once using shared/own Magicplan account
+✅ Future launches	Deep links skip login screen
+✅ No SDK needed	Uses Intent + URI scheme
+✅ Session retained	Magicplan keeps session alive internally
+✅ Good UX	No repeated logins, native app feel
+
+❗ Important Notes
+This approach is suitable for internal apps, MVPs, POCs, or pilot testing.
+
+If you want full-scale integration (multi-user, auto account creation, etc.), you must request Magicplan's Partner API/SDK Access from their support team.
+
+Never bypass authentication on behalf of users — only guide them through a one-time login.
+
+🔚 Final Thought
+👉 You don't need to log in repeatedly. Just:
+
+Log in once.
+
+Store that state.
+
+Use deep links for all scanning operations.

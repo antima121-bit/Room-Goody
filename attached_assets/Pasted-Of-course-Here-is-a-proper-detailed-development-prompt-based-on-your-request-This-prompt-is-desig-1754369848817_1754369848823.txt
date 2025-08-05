@@ -1,0 +1,155 @@
+Of course. Here is a proper, detailed development prompt based on your request. This prompt is designed to be given to a developer to clearly explain the tasks, fix the issues, and implement the required features successfully.
+
+-----
+
+### **Development Prompt: Fix Deep Link & Implement Object Detection Flow**
+
+**🎯 Project Overview:**
+This development task involves two critical objectives:
+
+1.  **Fix the MagicPlan Deep Link:** Resolve the issue where the "Launch Scanner" button fails to correctly redirect to the MagicPlan app, ensuring a seamless integration.
+2.  **Implement the Object Detection Flow:** Build the complete user journey for real-time object detection, from camera permission and live capture to detailed metadata extraction.
+
+-----
+
+### **Task 1: Resolve MagicPlan Deep Link Failure**
+
+**Objective:**
+Ensure that when a user clicks the "Launch Scanner" button, it successfully opens the MagicPlan mobile app to the scanning interface and provides a way to return data to our application.
+
+**Problem Description:**
+The current implementation fails because it uses a standard web URL (`https://cloud.magicplan.app/...`). This type of link opens a web browser, not the native mobile application's scanning function. A proper mobile deep link with a custom URL scheme is required.
+
+**Required Actions & Implementation Steps:**
+
+1.  **Use the Correct Deep Link Scheme:**
+
+      * You must use the official deep link scheme provided by MagicPlan's developer documentation. This will look something like `magicplan://app/capture` or `magicplan://scan`.
+      * **Crucially, append a `callback` parameter** to the URL. This parameter tells MagicPlan how to return to our app when the scan is complete.
+      * **Example Correct URL:** `magicplan://app/capture?callback=RoomScannerApp://scan-complete`
+
+2.  **Implement the Linking Logic:**
+
+      * Use React Native's `Linking` API to handle the interaction.
+      * First, check if the MagicPlan app is installed using `Linking.canOpenURL()`.
+      * If it is installed, call `Linking.openURL()`.
+      * If it is not installed, display a user-friendly alert prompting them to install MagicPlan.
+
+    <!-- end list -->
+
+    ```javascript
+    // src/services/magicplan/MagicPlanService.js
+    import { Linking, Alert } from 'react-native';
+
+    const MAGICPLAN_DEEP_LINK = 'magicplan://app/capture?callback=RoomScannerApp://scan-complete';
+
+    const launchScanner = async () => {
+      const isSupported = await Linking.canOpenURL(MAGICPLAN_DEEP_LINK);
+
+      if (isSupported) {
+        await Linking.openURL(MAGICPLAN_DEEP_LINK);
+      } else {
+        Alert.alert(
+          "Action Required",
+          "Please install the MagicPlan app to use this feature."
+        );
+      }
+    };
+    ```
+
+3.  **Configure App to Handle the Callback:**
+
+      * Your app must be configured to respond to the `RoomScannerApp://scan-complete` callback. This requires modifications to native configuration files:
+      * **Android (`AndroidManifest.xml`):** Add an `<intent-filter>` to your main activity to listen for the custom scheme.
+      * **iOS (`Info.plist`):** Add a `CFBundleURLTypes` entry to register the custom URL scheme.
+
+-----
+
+### **Task 2: Implement Object Detection & Data Capture Flow**
+
+**Objective:**
+Create a complete feature flow where a user can capture an image from a live camera and the app automatically extracts a comprehensive set of metadata about the object and its environment.
+
+**Required User Flow & Technical Implementation:**
+
+1.  **Request Permissions:**
+
+      * When the user enters the "Object Detection" screen, the app must immediately request **Camera** and **Location** permissions.
+      * Use a library like `react-native-permissions` for a robust implementation.
+      * If permissions are denied, show a clear message explaining why they are needed and provide a shortcut to the app's settings.
+
+2.  **Launch Live Camera:**
+
+      * Upon granting permissions, launch a full-screen, live camera interface.
+      * Use the `react-native-vision-camera` library for high-performance camera access.
+      * The interface should include a clear capture button.
+
+3.  **Capture Image & Process Data:**
+
+      * When the user presses the capture button, the app will take a photo.
+      * Immediately after capture, trigger an asynchronous function to process the image and gather location data. The function must perform the following extractions:
+
+    **Data Extraction Requirements:**
+
+      * **Geolocation (Latitude & Longitude):**
+
+          * **Library:** `react-native-geolocation-service`.
+          * **Action:** Fetch the current GPS coordinates. Configure the request for `highAccuracy: true`.
+          * **Precision:** Store the coordinates with up to **12 decimal places** as provided by the device's GPS hardware.
+
+      * **Location Name (City & Country):**
+
+          * **Action:** Take the latitude and longitude from the previous step and perform a **reverse geocoding** lookup.
+          * **API:** Use a service like the Google Maps Geocoding API or a free alternative to convert coordinates into a human-readable address (City, State, Country). This will be an API network request.
+
+      * **Color Extraction:**
+
+          * **Library:** `react-native-image-colors`.
+          * **Action:** Analyze the captured image to extract the dominant color and a palette of secondary colors.
+
+      * **Shape Detection:**
+
+          * **Library:** `react-native-opencv3`.
+          * **Action:** Process the image to detect the primary object's contour and classify its basic shape (e.g., "rectangle," "circle," "irregular").
+
+      * **Size Estimation:**
+
+          * **Action:** Based on the size of the detected object's bounding box relative to the entire image frame, classify its size as "Small," "Medium," or "Large."
+
+      * **Logo/Brand & Category Detection:**
+
+          * **Library:** Firebase ML Kit (`@react-native-firebase/ml`).
+          * **Action (Brand):** Use the `textRecognizerProcessImage()` function to find and extract any text on the object, which often corresponds to the brand name.
+          * **Action (Category):** Use the `cloudImageLabelerProcessImage()` function to identify the object's general category (e.g., "Chair," "Lamp," "Electronic device").
+
+4.  **Display & Save Results:**
+
+      * Once all processing is complete, display the extracted data to the user in a clear, readable format.
+      * Provide a "Save" button to store this complete data record in both local SQLite and Supabase.
+
+**Final Data Structure (Example JSON):**
+The final output for each detected object should be structured like this:
+
+```json
+{
+  "id": "uuid-12345",
+  "userId": "user-uuid-67890",
+  "imageUrl": "https://<supabase-storage-url>/.../image.jpg",
+  "timestamp": "2025-08-05T10:25:48Z",
+  "category": "Electronic Device",
+  "brand": "HP",
+  "color_palette": {
+    "dominant": "#222222",
+    "secondary": ["#FFFFFF", "#007AFF"]
+  },
+  "shape": "Rectangle",
+  "estimated_size": "Medium",
+  "location": {
+    "latitude": 24.405512345678,
+    "longitude": 81.868398765432,
+    "city": "Sidhi",
+    "state": "Madhya Pradesh",
+    "country": "India"
+  }
+}
+```

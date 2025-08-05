@@ -1,0 +1,1337 @@
+Complete React Native Room Scanner & Object Detection App - Full Development Prompt
+
+🎯 Project Overview
+
+Develop a comprehensive cross-platform React Native mobile application that combines Room Layout Scanning with Real-time Object Detection. The app features seamless MagicPlan integration, Firebase ML Kit for object recognition, dual storage architecture (local + cloud), and advanced search capabilities.
+
+Target Platforms: iOS & AndroidPrimary Framework: React Native with TypeScriptUI Design: Modern, intuitive interface with perfect user experience
+
+🛠️ Complete Tech Stack
+
+Core Framework
+
+React Native 0.72+ with TypeScript
+
+React Navigation 6.x for navigation
+
+React Native Gesture Handler for smooth interactions
+
+Authentication & Database
+
+Supabase (PostgreSQL, Auth, Storage, Real-time)
+
+SQLite (Local storage via react-native-sqlite-storage)
+
+AsyncStorage for app preferences
+
+Machine Learning & Computer Vision
+
+Firebase ML Kit (Object Detection, Text Recognition)
+
+TensorFlow Lite (Custom model support)
+
+OpenCV (Advanced image processing)
+
+Device Integration
+
+React Native Camera (Camera access)
+
+React Native Permissions (Permission management)
+
+React Native Geolocation (GPS with 12-decimal precision)
+
+React Native Image Picker (Gallery access)
+
+External Integrations
+
+MagicPlan API (Room scanning via deep links)
+
+Google Maps API (Location services)
+
+Cloudinary (Image optimization and storage)
+
+UI/UX Libraries
+
+React Native Elements (UI components)
+
+React Native Vector Icons (Iconography)
+
+React Native Animatable (Smooth animations)
+
+React Native Paper (Material Design components)
+
+Lottie React Native (Complex animations)
+
+Utilities
+
+Lodash (Data manipulation)
+
+Moment.js (Date handling)
+
+React Native Config (Environment variables)
+
+React Native Keychain (Secure storage)
+
+📱 Complete App Architecture
+
+App Structure
+
+RoomScannerApp/
+
+├── src/
+
+│ ├── components/ # Reusable UI components
+
+│ │ ├── common/
+
+│ │ ├── forms/
+
+│ │ ├── modals/
+
+│ │ └── cards/
+
+│ ├── screens/ # Screen components
+
+│ │ ├── auth/ # Authentication screens
+
+│ │ ├── home/ # Main dashboard
+
+│ │ ├── rooms/ # Room management
+
+│ │ ├── detection/ # Object detection
+
+│ │ ├── search/ # Search functionality
+
+│ │ └── profile/ # User profile
+
+│ ├── navigation/ # Navigation configuration
+
+│ ├── services/ # API and external services
+
+│ │ ├── auth/
+
+│ │ ├── database/
+
+│ │ ├── magicplan/
+
+│ │ ├── mlkit/
+
+│ │ ├── camera/
+
+│ │ └── storage/
+
+│ ├── utils/ # Helper functions
+
+│ ├── hooks/ # Custom React hooks
+
+│ ├── context/ # React Context providers
+
+│ ├── types/ # TypeScript definitions
+
+│ ├── constants/ # App constants
+
+│ └── assets/ # Images, icons, fonts
+
+├── android/ # Android-specific code
+
+├── ios/ # iOS-specific code
+
+└── __tests__/ # Test files
+
+🔐 Authentication System
+
+Features Required
+
+Email/Password Authentication via Supabase
+
+Guest Mode (anonymous sessions with local storage)
+
+Social Login (Google, Apple - optional)
+
+Password Reset functionality
+
+Email Verification workflow
+
+Biometric Authentication (Face ID, Touch ID)
+
+Implementation Requirements
+
+Login Screen
+
+interface LoginScreenFeatures {
+
+emailPasswordFields: boolean;
+
+rememberMeToggle: boolean;
+
+forgotPasswordLink: boolean;
+
+socialLoginButtons: boolean;
+
+guestModeOption: boolean;
+
+biometricPrompt: boolean;
+
+inputValidation: boolean;
+
+loadingStates: boolean;
+
+}
+
+User Context
+
+interface AuthContextType {
+
+user: User | null;
+
+isAuthenticated: boolean;
+
+isGuest: boolean;
+
+loading: boolean;
+
+signIn: (email: string, password: string) => Promise<void>;
+
+signUp: (userData: SignUpData) => Promise<void>;
+
+signOut: () => Promise<void>;
+
+resetPassword: (email: string) => Promise<void>;
+
+continueAsGuest: () => Promise<void>;
+
+enableBiometric: () => Promise<void>;
+
+}
+
+🏠 Home Dashboard
+
+Three Primary Actions
+
+1. Room Layout Scanner
+
+Button Design: Large card with home icon
+
+Label: "Scan Room"
+
+Subtitle: "Create room layouts with MagicPlan"
+
+Action: Opens Room Scanner Modal
+
+Deep Link Integration: Launch MagicPlan mobile app
+
+Callback Handling: Receive scan data and save rooms
+
+2. Real-Time Object Detection
+
+Button Design: Large card with camera icon
+
+Label: "Object Detection"
+
+Subtitle: "Identify and catalog objects"
+
+Action: Opens Camera interface
+
+ML Processing: Firebase ML Kit integration
+
+Data Capture: Objects, colors, shapes, GPS coordinates
+
+3. Advanced Search
+
+Button Design: Large card with search icon
+
+Label: "Search"
+
+Subtitle: "Find rooms and objects instantly"
+
+Action: Opens Search interface
+
+Multi-Criteria Filtering: Brand, category, color, shape, location
+
+Real-time Results: As-you-type search functionality
+
+Home Screen Features
+
+Welcome Message with user name/guest indicator
+
+Quick Stats (total rooms, objects detected, recent activity)
+
+Recent Activity Feed (last scanned rooms, detected objects)
+
+Quick Actions (access frequently used features)
+
+Offline Mode Indicator (show sync status)
+
+🏠 Room Layout Scanner (Complete Implementation)
+
+Deep Link Configuration
+
+Android Configuration (android/app/src/main/AndroidManifest.xml)
+
+<activity
+
+android:name=".MainActivity"
+
+android:exported="true"
+
+android:launchMode="singleTop">
+
+
+<!-- Existing main intent filter -->
+
+<intent-filter>
+
+<action android:name="android.intent.action.MAIN" />
+
+<category android:name="android.intent.category.LAUNCHER" />
+
+</intent-filter>
+
+
+<!-- Deep link intent filter -->
+
+<intent-filter android:autoVerify="true">
+
+<action android:name="android.intent.action.VIEW" />
+
+<category android:name="android.intent.category.DEFAULT" />
+
+<category android:name="android.intent.category.BROWSABLE" />
+
+<data android:scheme="roomscannerapp" />
+
+</intent-filter>
+
+
+<!-- MagicPlan callback intent filter -->
+
+<intent-filter>
+
+<action android:name="android.intent.action.VIEW" />
+
+<category android:name="android.intent.category.DEFAULT" />
+
+<category android:name="android.intent.category.BROWSABLE" />
+
+<data android:scheme="roomscannerapp" android:host="scan-complete" />
+
+</intent-filter>
+
+</activity>
+
+iOS Configuration (ios/RoomScannerApp/Info.plist)
+
+<key>CFBundleURLTypes</key>
+
+<array>
+
+<dict>
+
+<key>CFBundleURLName</key>
+
+<string>roomscannerapp</string>
+
+<key>CFBundleURLSchemes</key>
+
+<array>
+
+<string>roomscannerapp</string>
+
+</array>
+
+</dict>
+
+</array>
+
+
+
+<!-- Camera and Location Permissions -->
+
+<key>NSCameraUsageDescription</key>
+
+<string>This app needs camera access to detect objects and scan rooms</string>
+
+<key>NSLocationWhenInUseUsageDescription</key>
+
+<string>This app needs location access to tag detected objects with GPS coordinates</string>
+
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+
+<string>This app needs location access to provide accurate location tagging</string>
+
+MagicPlan Integration Service
+
+class MagicPlanIntegration {
+
+// Official deep link schemes (MUST be obtained from MagicPlan)
+
+private static DEEP_LINK_SCHEMES = [
+
+'magicplan://scan?callback=roomscannerapp://scan-complete',
+
+'magicplan://capture?return=roomscannerapp://scan-complete',
+
+'com.sensopia.magicplan://scan?callback=roomscannerapp://scan-complete'
+
+];
+
+
+
+static async launchScanner(): Promise<boolean>;
+
+static handleCallback(url: string): ScanResult | null;
+
+static checkAppInstalled(): Promise<boolean>;
+
+}
+
+Room Scanner Modal States
+
+Initial State: Introduction and launch button
+
+Scanning State: Loading while waiting for MagicPlan
+
+Manual State: Fallback when automatic callback fails
+
+Complete State: Room naming and saving
+
+Error State: Handle integration failures
+
+Room Data Management
+
+interface Room {
+
+id: string;
+
+name: string;
+
+userId: string;
+
+layoutImageUri?: string;
+
+planData?: string;
+
+furniture: FurnitureMarker[];
+
+gpsLocation?: GPSCoordinates;
+
+createdAt: string;
+
+updatedAt: string;
+
+syncStatus: 'synced' | 'pending' | 'failed';
+
+}
+
+
+
+interface FurnitureMarker {
+
+id: string;
+
+name: string;
+
+x: number;
+
+y: number;
+
+category?: string;
+
+roomId: string;
+
+}
+
+📷 Real-Time Object Detection
+
+Camera Interface Requirements
+
+Full-screen camera view with overlay controls
+
+Real-time ML processing (optional live detection)
+
+Manual capture button with confirmation
+
+Gallery import option for existing photos
+
+Flash and camera flip controls
+
+Grid overlay for better composition
+
+ML Processing Pipeline
+
+interface MLProcessingResult {
+
+objects: DetectedObject[];
+
+text: DetectedText[];
+
+colors: ColorPalette;
+
+shapes: DetectedShape[];
+
+confidence: number;
+
+processingTime: number;
+
+}
+
+
+
+interface DetectedObject {
+
+label: string;
+
+confidence: number;
+
+boundingBox: BoundingBox;
+
+category: string;
+
+subcategory?: string;
+
+brand?: string;
+
+estimatedSize?: ObjectDimensions;
+
+}
+
+Firebase ML Kit Integration
+
+Object Detection: Identify furniture, appliances, decor
+
+Text Recognition: Extract brand names, labels, text
+
+Barcode Scanning: Product identification
+
+Face Detection: Privacy-aware people detection
+
+Color Extraction Methods
+
+Dominant Color Analysis: K-means clustering
+
+Color Palette Generation: Extract 5-10 primary colors
+
+Color Naming: Map hex values to human-readable names
+
+Color Harmony Analysis: Complementary color suggestions
+
+Shape Detection Algorithms
+
+Contour Detection: OpenCV-based shape recognition
+
+Geometric Classification: Circle, rectangle, triangle, irregular
+
+Size Estimation: Real-world measurements using perspective
+
+Orientation Analysis: Horizontal, vertical, angled positioning
+
+GPS Integration
+
+interface GPSLocation {
+
+latitude: number; // 12 decimal precision
+
+longitude: number; // 12 decimal precision
+
+accuracy: number; // Meters
+
+altitude?: number;
+
+heading?: number;
+
+speed?: number;
+
+timestamp: string;
+
+address?: string; // Reverse geocoding
+
+city?: string;
+
+state?: string;
+
+country?: string;
+
+}
+
+🔍 Advanced Search System
+
+Multi-Criteria Search Interface
+
+interface SearchCriteria {
+
+brand?: string;
+
+category?: string;
+
+color?: string[];
+
+shape?: string;
+
+size?: SizeRange;
+
+location?: LocationFilter;
+
+dateRange?: DateRange;
+
+confidence?: number;
+
+room?: string;
+
+}
+
+
+
+interface SearchFilters {
+
+textQuery: string;
+
+filters: SearchCriteria;
+
+sortBy: 'date' | 'confidence' | 'name' | 'location';
+
+sortOrder: 'asc' | 'desc';
+
+limit: number;
+
+offset: number;
+
+}
+
+Search Features
+
+Auto-complete suggestions for all filter fields
+
+Filter chips for active search criteria
+
+Saved searches for frequent queries
+
+Search history with quick access
+
+Advanced filters modal for complex queries
+
+Export results to CSV/JSON
+
+Share search results via deep links
+
+Search Result Display
+
+Grid/List view toggle
+
+Image thumbnails with object highlights
+
+Confidence scores and detection metadata
+
+Location information with maps integration
+
+Quick actions (edit, delete, share)
+
+Batch operations for multiple results
+
+🗄️ Data Storage Architecture
+
+Dual Storage Strategy
+
+Local Storage (SQLite)
+
+-- Rooms table
+
+CREATE TABLE rooms (
+
+id TEXT PRIMARY KEY,
+
+name TEXT NOT NULL,
+
+user_id TEXT NOT NULL,
+
+layout_image_uri TEXT,
+
+plan_data TEXT,
+
+furniture TEXT, -- JSON array
+
+gps_location TEXT, -- JSON object
+
+created_at TEXT NOT NULL,
+
+updated_at TEXT NOT NULL,
+
+sync_status TEXT DEFAULT 'pending'
+
+);
+
+
+
+-- Detected objects table
+
+CREATE TABLE detected_objects (
+
+id TEXT PRIMARY KEY,
+
+user_id TEXT NOT NULL,
+
+image_uri TEXT NOT NULL,
+
+objects TEXT NOT NULL, -- JSON array
+
+ml_metadata TEXT NOT NULL, -- JSON object
+
+gps_location TEXT NOT NULL, -- JSON object
+
+colors TEXT NOT NULL, -- JSON array
+
+shapes TEXT NOT NULL, -- JSON array
+
+created_at TEXT NOT NULL,
+
+sync_status TEXT DEFAULT 'pending'
+
+);
+
+
+
+-- Search cache table
+
+CREATE TABLE search_cache (
+
+query_hash TEXT PRIMARY KEY,
+
+results TEXT NOT NULL, -- JSON array
+
+created_at TEXT NOT NULL,
+
+expires_at TEXT NOT NULL
+
+);
+
+Cloud Storage (Supabase)
+
+-- Users table (extends auth.users)
+
+CREATE TABLE user_profiles (
+
+id UUID REFERENCES auth.users(id) PRIMARY KEY,
+
+first_name TEXT,
+
+last_name TEXT,
+
+avatar_url TEXT,
+
+settings JSONB DEFAULT '{}',
+
+created_at TIMESTAMP DEFAULT NOW(),
+
+updated_at TIMESTAMP DEFAULT NOW()
+
+);
+
+
+
+-- Rooms table
+
+CREATE TABLE rooms (
+
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+name TEXT NOT NULL,
+
+user_id UUID REFERENCES auth.users(id),
+
+layout_image_uri TEXT,
+
+plan_data JSONB,
+
+furniture JSONB DEFAULT '[]',
+
+gps_location JSONB,
+
+created_at TIMESTAMP DEFAULT NOW(),
+
+updated_at TIMESTAMP DEFAULT NOW(),
+
+
+-- Enable Row Level Security
+
+CONSTRAINT rooms_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+
+);
+
+
+
+-- Detected objects table
+
+CREATE TABLE detected_objects (
+
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+user_id UUID REFERENCES auth.users(id),
+
+image_uri TEXT NOT NULL,
+
+objects JSONB NOT NULL,
+
+ml_metadata JSONB NOT NULL,
+
+gps_location JSONB NOT NULL,
+
+colors JSONB NOT NULL,
+
+shapes JSONB NOT NULL,
+
+created_at TIMESTAMP DEFAULT NOW(),
+
+
+CONSTRAINT detected_objects_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+
+);
+
+
+
+-- Enable Row Level Security
+
+ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE detected_objects ENABLE ROW LEVEL SECURITY;
+
+
+
+-- RLS Policies
+
+CREATE POLICY "Users can only access their own rooms" ON rooms
+
+FOR ALL USING (auth.uid() = user_id);
+
+
+
+CREATE POLICY "Users can only access their own objects" ON detected_objects
+
+FOR ALL USING (auth.uid() = user_id);
+
+Synchronization Strategy
+
+Offline-first approach: All operations work offline
+
+Background sync: Automatic sync when connected
+
+Conflict resolution: Last-write-wins with user notification
+
+Partial sync: Sync only changed data
+
+Retry mechanism: Exponential backoff for failed syncs
+
+🎨 Perfect UI/UX Design System
+
+Color Palette
+
+export const COLORS = {
+
+// Primary colors
+
+PRIMARY: '#007AFF', // iOS Blue
+
+PRIMARY_DARK: '#0056CC', // Darker shade
+
+PRIMARY_LIGHT: '#B3D7FF', // Lighter shade
+
+
+// Secondary colors
+
+SECONDARY: '#34C759', // Success Green
+
+ACCENT: '#FF3B30', // Error Red
+
+WARNING: '#FF9500', // Warning Orange
+
+INFO: '#5AC8FA', // Info Blue
+
+
+// Neutral colors
+
+BLACK: '#000000',
+
+WHITE: '#FFFFFF',
+
+GRAY_100: '#F2F2F7', // Background
+
+GRAY_200: '#E5E5EA', // Borders
+
+GRAY_300: '#C7C7CC', // Disabled
+
+GRAY_400: '#AEAEB2', // Placeholder
+
+GRAY_500: '#8E8E93', // Secondary text
+
+GRAY_600: '#636366', // Body text
+
+GRAY_900: '#1C1C1E', // Heading text
+
+
+// Semantic colors
+
+SUCCESS: '#34C759',
+
+ERROR: '#FF3B30',
+
+WARNING: '#FF9500',
+
+INFO: '#007AFF',
+
+};
+
+Typography System
+
+export const TYPOGRAPHY = {
+
+// Font families
+
+FONT_FAMILY: {
+
+REGULAR: 'System',
+
+MEDIUM: 'System-Medium',
+
+SEMIBOLD: 'System-Semibold',
+
+BOLD: 'System-Bold',
+
+},
+
+
+// Font sizes
+
+FONT_SIZE: {
+
+SMALL: 12,
+
+CAPTION: 14,
+
+BODY: 16,
+
+TITLE: 20,
+
+HEADING: 24,
+
+LARGE_TITLE: 32,
+
+},
+
+
+// Line heights
+
+LINE_HEIGHT: {
+
+SMALL: 16,
+
+CAPTION: 18,
+
+BODY: 22,
+
+TITLE: 26,
+
+HEADING: 30,
+
+LARGE_TITLE: 38,
+
+},
+
+};
+
+Spacing System
+
+export const SPACING = {
+
+XS: 4,
+
+SM: 8,
+
+MD: 16,
+
+LG: 24,
+
+XL: 32,
+
+XXL: 48,
+
+};
+
+Component Library
+
+Buttons
+
+Primary Button: Filled background, rounded corners
+
+Secondary Button: Outlined style with primary color
+
+Text Button: No background, primary color text
+
+Icon Button: Circular with icon only
+
+Floating Action Button: Material Design FAB
+
+Cards
+
+Feature Card: Large cards for home screen actions
+
+Content Card: Standard card for lists and grids
+
+Image Card: Card with prominent image
+
+Info Card: Card with icon and text content
+
+Forms
+
+Text Input: Rounded corners with label animation
+
+Search Input: With search icon and clear button
+
+Dropdown: Native picker with custom styling
+
+Checkbox/Radio: Custom styled form controls
+
+Switch: iOS/Android native switches
+
+Navigation
+
+Bottom Tabs: Custom styled tab bar
+
+Header: Consistent navigation header
+
+Modal Header: Modal-specific header design
+
+Breadcrumbs: For deep navigation paths
+
+Animation Guidelines
+
+Micro-interactions: Button press feedback, loading states
+
+Page transitions: Smooth slide and fade animations
+
+List animations: Staggered item appearances
+
+Loading animations: Skeleton screens and spinners
+
+Gesture feedback: Visual response to user interactions
+
+🔧 Advanced Features
+
+Permission Management
+
+class PermissionManager {
+
+static async requestCameraPermission(): Promise<boolean>;
+
+static async requestLocationPermission(): Promise<boolean>;
+
+static async requestStoragePermission(): Promise<boolean>;
+
+static async checkAllPermissions(): Promise<PermissionStatus>;
+
+static showPermissionRationale(permission: string): void;
+
+}
+
+Offline Functionality
+
+Complete offline operation for all core features
+
+Sync queue management for pending operations
+
+Offline indicator in UI when disconnected
+
+Data compression for efficient storage
+
+Cache management with automatic cleanup
+
+Error Handling
+
+Global error boundary for React crashes
+
+Network error handling with retry mechanisms
+
+ML processing failures with fallback options
+
+Permission denied scenarios with clear guidance
+
+Storage full situations with cleanup suggestions
+
+Performance Optimization
+
+Image optimization and caching
+
+Lazy loading for large lists
+
+Memory management for ML operations
+
+Battery optimization for GPS usage
+
+CPU throttling for intensive operations
+
+Security Features
+
+Data encryption for sensitive information
+
+Secure storage for authentication tokens
+
+API key protection from reverse engineering
+
+User data privacy with clear policies
+
+Biometric authentication for app access
+
+Analytics & Monitoring
+
+Crash reporting with detailed stack traces
+
+Performance monitoring for app responsiveness
+
+User behavior tracking (privacy-compliant)
+
+Feature usage statistics for optimization
+
+ML accuracy metrics for model improvement
+
+📱 Complete Screen Specifications
+
+Authentication Screens
+
+Login Screen
+
+Email input with validation
+
+Password input with show/hide toggle
+
+Remember me checkbox
+
+Biometric login option (if available)
+
+Forgot password link
+
+Sign up navigation
+
+Continue as guest option
+
+Social login buttons (optional)
+
+Sign Up Screen
+
+First/Last name inputs
+
+Email input with validation
+
+Password input with strength indicator
+
+Confirm password field
+
+Terms and conditions acceptance
+
+Email verification flow
+
+Welcome onboarding after signup
+
+Forgot Password Screen
+
+Email input for reset
+
+Reset instructions display
+
+Resend email functionality
+
+Back to login navigation
+
+Main App Screens
+
+Home Screen
+
+interface HomeScreenFeatures {
+
+welcomeHeader: boolean;
+
+quickStats: boolean;
+
+primaryActions: [
+
+'Room Scanner',
+
+'Object Detection',
+
+'Search'
+
+];
+
+recentActivity: boolean;
+
+offlineIndicator: boolean;
+
+quickAccess: boolean;
+
+}
+
+Room Scanner Screens
+
+Scanner Modal: Multi-state interface
+
+Room List: All saved rooms
+
+Room Detail: View/edit room layout
+
+Furniture Markers: Add/edit furniture on layout
+
+Room Settings: Rename, delete, export options
+
+Object Detection Screens
+
+Camera Interface: Full-screen camera with controls
+
+Processing Screen: ML analysis progress
+
+Result Screen: Detected objects with metadata
+
+Object Detail: Individual object information
+
+Detection History: All previous detections
+
+Search Screens
+
+Search Interface: Multi-criteria search form
+
+Filter Modal: Advanced filtering options
+
+Results List/Grid: Search results display
+
+Saved Searches: Quick access to frequent searches
+
+Search History: Previous search queries
+
+Profile & Settings
+
+User Profile: Account information and avatar
+
+App Settings: Preferences and configuration
+
+Data Management: Export, import, sync options
+
+Privacy Settings: Data usage and permissions
+
+Help & Support: FAQ, contact, tutorials
+
+🚀 Development Workflow
+
+Phase 1: Foundation (Week 1-2)
+
+Project Setup: Initialize React Native project
+
+Navigation: Implement React Navigation structure
+
+Authentication: Supabase auth integration
+
+Basic UI: Design system and core components
+
+Data Layer: SQLite and Supabase setup
+
+Phase 2: Core Features (Week 3-5)
+
+Home Screen: Main dashboard with three actions
+
+Room Scanner: MagicPlan integration and deep links
+
+Object Detection: Camera interface and ML processing
+
+Data Storage: Complete local and cloud sync
+
+Phase 3: Advanced Features (Week 6-7)
+
+Search System: Multi-criteria search implementation
+
+Advanced UI: Animations, transitions, polish
+
+Performance: Optimization and error handling
+
+Testing: Unit tests and integration testing
+
+Phase 4: Polish & Deploy (Week 8)
+
+User Testing: Beta testing and feedback
+
+Bug Fixes: Address issues and edge cases
+
+Documentation: User guides and developer docs
+
+Deployment: App store preparation and release
+
+📋 Success Metrics
+
+Technical Metrics
+
+App performance: <3 second startup time
+
+ML accuracy: >95% object detection confidence
+
+Crash rate: <0.1% crash-free sessions
+
+Battery usage: Minimal impact on device battery
+
+Memory usage: <150MB peak memory consumption
+
+User Experience Metrics
+
+User retention: >70% weekly active users
+
+Feature adoption: >80% users try all three main features
+
+Task completion: >90% successful room scans
+
+User satisfaction: >4.5/5 app store rating
+
+Support tickets: <5% users require support
+
+Business Metrics
+
+Download numbers: Target user acquisition goals
+
+User engagement: Daily/monthly active user metrics
+
+Feature usage: Most/least used functionality analysis
+
+Geographic reach: App usage across target markets
+
+Platform performance: iOS vs Android usage patterns
+
+📝 Final Deliverables
+
+Code Implementation
+
+Complete React Native app with all features
+
+TypeScript definitions for all components and services
+
+Comprehensive test suite with >80% code coverage
+
+Documentation for all APIs and components
+
+Deployment scripts for both platforms
+
+Configuration Files
+
+Environment setup for development, staging, production
+
+Deep link configuration for iOS and Android
+
+Permission manifests for all required permissions
+
+Build configurations for app store deployment
+
+CI/CD pipeline for automated testing and deployment
+
+Design Assets
+
+App icons for all required sizes
+
+Launcher screens for both platforms
+
+UI mockups and design specifications
+
+Brand guidelines and style guide
+
+Marketing assets for app store listings
+
+This comprehensive prompt provides everything needed to build a production-ready, feature-complete Room Scanner and Object Detection app with perfect UI/UX and full deep link integration.

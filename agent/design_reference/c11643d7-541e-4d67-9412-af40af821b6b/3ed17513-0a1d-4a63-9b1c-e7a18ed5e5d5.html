@@ -1,0 +1,888 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Scanner & Object Detection App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#64748B',
+                        accent: '#10B981',
+                        background: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .app-container {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #F8FAFC;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+        }
+        
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .detection-preview {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .detection-box {
+            position: absolute;
+            border: 2px solid #10B981;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 4px;
+        }
+        
+        .scanning-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #2563EB, transparent);
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(300px); }
+        }
+    </style>
+</head>
+<body class="bg-background">
+    <div class="app-container">
+        <!-- Navigation Header -->
+        <header class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-cube text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-lg font-semibold text-gray-900">RoomScanner</h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-bell text-gray-600"></i>
+                    </button>
+                    <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-user-circle text-gray-600 text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main App Content -->
+        <div id="app-content">
+            <!-- Login Screen -->
+            <div id="login-screen" class="p-6 space-y-8 min-h-screen flex flex-col justify-center">
+                <div class="text-center space-y-4">
+                    <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto">
+                        <i class="fas fa-cube text-white text-2xl"></i>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-900">Welcome to RoomScanner</h1>
+                    <p class="text-gray-600">Scan rooms and detect objects with AI-powered precision</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter your email" data-mock="true">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter your password" data-mock="true">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
+                            <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                        </label>
+                        <button class="text-sm text-primary hover:text-blue-700">Forgot password?</button>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="showDashboard()" class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        Sign In
+                    </button>
+                    <button onclick="showDashboard()" class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                        Continue as Guest
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <span class="text-sm text-gray-600">Don't have an account? </span>
+                    <button class="text-sm text-primary font-medium hover:text-blue-700">Sign up</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Screen -->
+            <div id="dashboard-screen" class="hidden">
+                <!-- Welcome Section -->
+                <div class="bg-gradient-to-r from-primary to-blue-600 text-white p-6 rounded-b-3xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold">Good morning, Alex</h2>
+                            <p class="text-blue-100">Ready to scan and detect?</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-blue-100">Sync Status</div>
+                            <div class="flex items-center space-x-1">
+                                <div class="w-2 h-2 bg-accent rounded-full"></div>
+                                <span class="text-sm">Online</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">12</div>
+                            <div class="text-xs text-blue-100">Rooms Scanned</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">89</div>
+                            <div class="text-xs text-blue-100">Objects Detected</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">5</div>
+                            <div class="text-xs text-blue-100">Projects Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Actions -->
+                <div class="p-6 space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Main Actions</h3>
+                    
+                    <!-- Scan Room Card -->
+                    <div onclick="showRoomScanner()" class="bg-white rounded-2xl p-6 shadow-sm card-hover cursor-pointer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-home text-primary text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-900">Scan Room</h4>
+                                <p class="text-sm text-gray-600">Create room layouts with MagicPlan</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Object Detection Card -->
+                    <div onclick="showObjectDetection()" class="bg-white rounded-2xl p-6 shadow-sm card-hover cursor-pointer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-camera text-accent text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-900">Object Detection</h4>
+                                <p class="text-sm text-gray-600">Identify and catalog objects with AI</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Search Card -->
+                    <div onclick="showSearch()" class="bg-white rounded-2xl p-6 shadow-sm card-hover cursor-pointer">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-search text-purple-600 text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-gray-900">Search</h4>
+                                <p class="text-sm text-gray-600">Find rooms and objects instantly</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                    <div class="space-y-3">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-home text-primary text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900">Miller Living Room</p>
+                                    <p class="text-sm text-gray-600">Scanned 2 hours ago</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-couch text-accent text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900">Blue Armchair detected</p>
+                                    <p class="text-sm text-gray-600">4 hours ago in Johnson Home</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Scanner Screen -->
+            <div id="room-scanner-screen" class="hidden">
+                <div class="bg-white border-b border-gray-100 p-4 flex items-center space-x-3">
+                    <button onclick="showDashboard()" class="p-2 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900">Room Scanner</h2>
+                </div>
+
+                <div class="p-6 space-y-6">
+                    <!-- Scanner Instructions -->
+                    <div class="text-center space-y-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
+                            <i class="fas fa-home text-primary text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900">Scan Your Room</h3>
+                            <p class="text-gray-600 mt-2">Upload a room layout image or use our MagicPlan integration</p>
+                        </div>
+                    </div>
+
+                    <!-- Upload Options -->
+                    <div class="space-y-4">
+                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer" onclick="document.getElementById('room-upload').click()">
+                            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-600">Click to upload room layout</p>
+                            <p class="text-sm text-gray-500 mt-1">Supports JPG, PNG files</p>
+                        </div>
+                        <input type="file" id="room-upload" class="hidden" accept="image/*" onchange="handleRoomUpload(event)">
+
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-background text-gray-500">or</span>
+                            </div>
+                        </div>
+
+                        <button onclick="launchMagicPlan()" class="w-full bg-primary text-white py-4 rounded-xl font-medium flex items-center justify-center space-x-2 hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>Launch MagicPlan Scanner</span>
+                        </button>
+                    </div>
+
+                    <!-- Scanning State (Hidden by default) -->
+                    <div id="scanning-state" class="hidden text-center space-y-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto pulse-animation">
+                            <i class="fas fa-sync-alt text-primary text-2xl fa-spin"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Scanning in Progress</h3>
+                            <p class="text-gray-600">Waiting for MagicPlan data...</p>
+                        </div>
+                    </div>
+
+                    <!-- Room Preview (Hidden by default) -->
+                    <div id="room-preview" class="hidden space-y-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <!-- High-resolution interior room layout image -->
+                            <img id="room-image" src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600" alt="Scanned room layout" class="w-full h-48 object-cover rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Room Name</label>
+                            <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter room name" data-mock="true">
+                        </div>
+                        <button onclick="saveRoom()" class="w-full bg-accent text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-colors">
+                            Save Room Layout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Object Detection Screen -->
+            <div id="object-detection-screen" class="hidden">
+                <div class="bg-white border-b border-gray-100 p-4 flex items-center space-x-3">
+                    <button onclick="showDashboard()" class="p-2 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900">Object Detection</h2>
+                    <div class="flex-1"></div>
+                    <button class="p-2 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-cog text-gray-600"></i>
+                    </button>
+                </div>
+
+                <!-- Camera Interface -->
+                <div class="relative">
+                    <div class="detection-preview bg-black aspect-[4/3] relative overflow-hidden">
+                        <!-- Modern living room with furniture -->
+                        <img id="camera-preview" src="https://images.unsplash.com/photo-1554995207-c18c203602cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600" alt="Living room with modern furniture" class="w-full h-full object-cover">
+                        
+                        <!-- Detection Overlays (Hidden by default) -->
+                        <div id="detection-overlays" class="hidden">
+                            <!-- Sofa Detection -->
+                            <div class="detection-box" style="top: 30%; left: 15%; width: 45%; height: 35%;">
+                                <div class="absolute -top-6 left-0 bg-accent text-white px-2 py-1 rounded text-xs font-medium">
+                                    Sofa (92%)
+                                </div>
+                            </div>
+                            <!-- Coffee Table Detection -->
+                            <div class="detection-box" style="top: 55%; left: 25%; width: 30%; height: 20%;">
+                                <div class="absolute -top-6 left-0 bg-accent text-white px-2 py-1 rounded text-xs font-medium">
+                                    Coffee Table (87%)
+                                </div>
+                            </div>
+                            <!-- TV Detection -->
+                            <div class="detection-box" style="top: 20%; left: 60%; width: 25%; height: 25%;">
+                                <div class="absolute -top-6 left-0 bg-accent text-white px-2 py-1 rounded text-xs font-medium">
+                                    Television (94%)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scanning Line -->
+                        <div id="scanning-line" class="scanning-line hidden"></div>
+
+                        <!-- Camera Controls -->
+                        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                            <button onclick="captureObject()" class="w-16 h-16 bg-white rounded-full border-4 border-gray-300 flex items-center justify-center hover:border-primary transition-colors">
+                                <div class="w-12 h-12 bg-primary rounded-full"></div>
+                            </button>
+                        </div>
+
+                        <!-- Additional Controls -->
+                        <div class="absolute top-4 right-4 space-y-2">
+                            <button class="w-10 h-10 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="w-10 h-10 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white">
+                                <i class="fas fa-bolt"></i>
+                            </button>
+                        </div>
+
+                        <!-- Gallery Button -->
+                        <div class="absolute bottom-4 left-4">
+                            <button onclick="document.getElementById('object-upload').click()" class="w-12 h-12 bg-black bg-opacity-50 rounded-xl flex items-center justify-center text-white">
+                                <i class="fas fa-images"></i>
+                            </button>
+                        </div>
+                        <input type="file" id="object-upload" class="hidden" accept="image/*" onchange="handleObjectUpload(event)">
+                    </div>
+                </div>
+
+                <!-- Detection Results -->
+                <div id="detection-results" class="hidden p-6 space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Detection Results</h3>
+                    
+                    <!-- Detected Objects List -->
+                    <div class="space-y-3">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-couch text-primary"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900">Sofa</h4>
+                                    <div class="text-sm text-gray-600 space-y-1">
+                                        <p><span class="font-medium">Shape:</span> Rectangle</p>
+                                        <p><span class="font-medium">Colors:</span> #8B7355, #5D4E37</p>
+                                        <p><span class="font-medium">Size:</span> Large</p>
+                                        <p><span class="font-medium">Confidence:</span> 92%</p>
+                                        <p><span class="font-medium">Location:</span> 24.4055°N, 81.8683°E</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-tv text-accent"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-gray-900">Television</h4>
+                                    <div class="text-sm text-gray-600 space-y-1">
+                                        <p><span class="font-medium">Brand:</span> Samsung</p>
+                                        <p><span class="font-medium">Shape:</span> Rectangle</p>
+                                        <p><span class="font-medium">Colors:</span> #1A1A1A</p>
+                                        <p><span class="font-medium">Size:</span> Large</p>
+                                        <p><span class="font-medium">Confidence:</span> 94%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button onclick="saveDetection()" class="flex-1 bg-primary text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                            Save Objects
+                        </button>
+                        <button onclick="retakePhoto()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                            Retake
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="p-6 space-y-3">
+                    <button onclick="startDetection()" class="w-full bg-accent text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-colors">
+                        Start Real-time Detection
+                    </button>
+                    <button onclick="showBatchUpload()" class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                        Batch Upload Images
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Screen -->
+            <div id="search-screen" class="hidden">
+                <div class="bg-white border-b border-gray-100 p-4 flex items-center space-x-3">
+                    <button onclick="showDashboard()" class="p-2 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-lg font-semibold text-gray-900">Advanced Search</h2>
+                </div>
+
+                <div class="p-6 space-y-6">
+                    <!-- Search Bar -->
+                    <div class="relative">
+                        <input type="text" class="w-full p-4 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Search rooms and objects..." data-mock="true">
+                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+
+                    <!-- Filter Categories -->
+                    <div class="space-y-4">
+                        <h3 class="font-semibold text-gray-900">Filters</h3>
+                        
+                        <!-- Category Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-mock="true">
+                                <option>All Categories</option>
+                                <option>Furniture</option>
+                                <option>Electronics</option>
+                                <option>Decor</option>
+                                <option>Appliances</option>
+                            </select>
+                        </div>
+
+                        <!-- Subcategory Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-mock="true">
+                                <option>All Subcategories</option>
+                                <option>Armchair</option>
+                                <option>Sofa</option>
+                                <option>Table</option>
+                                <option>Television</option>
+                            </select>
+                        </div>
+
+                        <!-- Color Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Color</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button class="w-full h-10 bg-blue-500 rounded-lg border-2 border-transparent hover:border-primary transition-colors"></button>
+                                <button class="w-full h-10 bg-red-500 rounded-lg border-2 border-transparent hover:border-primary transition-colors"></button>
+                                <button class="w-full h-10 bg-green-500 rounded-lg border-2 border-transparent hover:border-primary transition-colors"></button>
+                                <button class="w-full h-10 bg-yellow-500 rounded-lg border-2 border-transparent hover:border-primary transition-colors"></button>
+                                <button class="w-full h-10 bg-purple-500 rounded-lg border-2 border-transparent hover:border-primary transition-colors"></button>
+                                <button class="w-full h-10 bg-pink-500 rounded-lg border-2 border-transparent hover:border-primary transition-colors"></button>
+                                <button class="w-full h-10 bg-gray-800 rounded-lg border-2 border-transparent hover:border-primary transition-colors"></button>
+                                <button class="w-full h-10 bg-white border border-gray-300 rounded-lg border-2 border-transparent hover:border-primary transition-colors"></button>
+                            </div>
+                        </div>
+
+                        <!-- Shape Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Shape</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition-colors">Rectangle</button>
+                                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition-colors">Circle</button>
+                                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition-colors">Square</button>
+                                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition-colors">Irregular</button>
+                            </div>
+                        </div>
+
+                        <!-- Location Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                            <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter city or coordinates" data-mock="true">
+                        </div>
+                    </div>
+
+                    <!-- Active Filters -->
+                    <div class="space-y-2">
+                        <h4 class="text-sm font-medium text-gray-700">Active Filters</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-primary text-white rounded-full text-sm flex items-center space-x-1">
+                                <span>Furniture</span>
+                                <button class="ml-1 hover:bg-blue-700 rounded-full">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </span>
+                            <span class="px-3 py-1 bg-accent text-white rounded-full text-sm flex items-center space-x-1">
+                                <span>Blue</span>
+                                <button class="ml-1 hover:bg-green-700 rounded-full">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-semibold text-gray-900">Search Results</h3>
+                            <span class="text-sm text-gray-600">3 items found</span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <!-- Result Item 1 -->
+                            <div class="bg-white rounded-xl p-4 shadow-sm">
+                                <div class="flex space-x-3">
+                                    <!-- Modern blue armchair in elegant setting -->
+                                    <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" alt="Blue modern armchair" class="w-20 h-20 object-cover rounded-lg">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">Blue Armchair</h4>
+                                        <p class="text-sm text-gray-600">Johnson Home - Living Room</p>
+                                        <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                                            <span>Shape: Irregular</span>
+                                            <span>Color: #4A90E2</span>
+                                            <span>2 hours ago</span>
+                                        </div>
+                                    </div>
+                                    <button class="p-2 hover:bg-gray-100 rounded-lg">
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Result Item 2 -->
+                            <div class="bg-white rounded-xl p-4 shadow-sm">
+                                <div class="flex space-x-3">
+                                    <!-- Modern navy blue sofa in contemporary living room -->
+                                    <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" alt="Navy blue sofa" class="w-20 h-20 object-cover rounded-lg">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">Navy Blue Sofa</h4>
+                                        <p class="text-sm text-gray-600">Miller Living Room</p>
+                                        <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                                            <span>Shape: Rectangle</span>
+                                            <span>Color: #1E3A8A</span>
+                                            <span>1 day ago</span>
+                                        </div>
+                                    </div>
+                                    <button class="p-2 hover:bg-gray-100 rounded-lg">
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Result Item 3 -->
+                            <div class="bg-white rounded-xl p-4 shadow-sm">
+                                <div class="flex space-x-3">
+                                    <!-- Contemporary blue accent chair -->
+                                    <img src="https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" alt="Blue accent chair" class="w-20 h-20 object-cover rounded-lg">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">Blue Accent Chair</h4>
+                                        <p class="text-sm text-gray-600">Davis Home - Study Room</p>
+                                        <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                                            <span>Shape: Irregular</span>
+                                            <span>Color: #3B82F6</span>
+                                            <span>3 days ago</span>
+                                        </div>
+                                    </div>
+                                    <button class="p-2 hover:bg-gray-100 rounded-lg">
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="pt-4 border-t border-gray-200">
+                        <button onclick="exportResults()" class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2">
+                            <i class="fas fa-download"></i>
+                            <span>Export Search Results</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bg-white border-t border-gray-200 fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-[430px]">
+            <div class="flex items-center justify-around py-2">
+                <button onclick="showDashboard()" class="flex flex-col items-center space-y-1 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-home text-primary text-lg"></i>
+                    <span class="text-xs text-primary font-medium">Home</span>
+                </button>
+                <button onclick="showRoomScanner()" class="flex flex-col items-center space-y-1 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-home text-gray-400 text-lg"></i>
+                    <span class="text-xs text-gray-500">Rooms</span>
+                </button>
+                <button onclick="showObjectDetection()" class="flex flex-col items-center space-y-1 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-camera text-gray-400 text-lg"></i>
+                    <span class="text-xs text-gray-500">Detect</span>
+                </button>
+                <button onclick="showSearch()" class="flex flex-col items-center space-y-1 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-search text-gray-400 text-lg"></i>
+                    <span class="text-xs text-gray-500">Search</span>
+                </button>
+                <button class="flex flex-col items-center space-y-1 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-user text-gray-400 text-lg"></i>
+                    <span class="text-xs text-gray-500">Profile</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        (function() {
+            // App State Management
+            let currentScreen = 'login';
+            
+            // Screen Navigation Functions
+            window.showDashboard = function() {
+                hideAllScreens();
+                document.getElementById('dashboard-screen').classList.remove('hidden');
+                document.getElementById('dashboard-screen').classList.add('fade-in');
+                currentScreen = 'dashboard';
+                updateNavigation();
+            };
+            
+            window.showRoomScanner = function() {
+                hideAllScreens();
+                document.getElementById('room-scanner-screen').classList.remove('hidden');
+                document.getElementById('room-scanner-screen').classList.add('slide-up');
+                currentScreen = 'room-scanner';
+                updateNavigation();
+            };
+            
+            window.showObjectDetection = function() {
+                hideAllScreens();
+                document.getElementById('object-detection-screen').classList.remove('hidden');
+                document.getElementById('object-detection-screen').classList.add('slide-up');
+                currentScreen = 'object-detection';
+                updateNavigation();
+            };
+            
+            window.showSearch = function() {
+                hideAllScreens();
+                document.getElementById('search-screen').classList.remove('hidden');
+                document.getElementById('search-screen').classList.add('slide-up');
+                currentScreen = 'search';
+                updateNavigation();
+            };
+            
+            function hideAllScreens() {
+                const screens = ['login-screen', 'dashboard-screen', 'room-scanner-screen', 'object-detection-screen', 'search-screen'];
+                screens.forEach(screen => {
+                    const element = document.getElementById(screen);
+                    if (element) {
+                        element.classList.add('hidden');
+                        element.classList.remove('fade-in', 'slide-up');
+                    }
+                });
+            }
+            
+            function updateNavigation() {
+                // Update navigation active states
+                const navButtons = document.querySelectorAll('nav button');
+                navButtons.forEach(btn => {
+                    const icon = btn.querySelector('i');
+                    const text = btn.querySelector('span');
+                    icon.classList.remove('text-primary');
+                    icon.classList.add('text-gray-400');
+                    text.classList.remove('text-primary', 'font-medium');
+                    text.classList.add('text-gray-500');
+                });
+                
+                // Highlight current screen
+                if (currentScreen === 'dashboard') {
+                    const homeBtn = navButtons[0];
+                    homeBtn.querySelector('i').classList.add('text-primary');
+                    homeBtn.querySelector('span').classList.add('text-primary', 'font-medium');
+                }
+            }
+            
+            // Room Scanner Functions
+            window.handleRoomUpload = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // TODO: Implement file processing logic
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('room-image').src = e.target.result;
+                        showRoomPreview();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            
+            window.launchMagicPlan = function() {
+                // TODO: Implement MagicPlan deep link integration
+                document.getElementById('scanning-state').classList.remove('hidden');
+                
+                // Simulate scanning process
+                setTimeout(() => {
+                    document.getElementById('scanning-state').classList.add('hidden');
+                    showRoomPreview();
+                }, 3000);
+            };
+            
+            function showRoomPreview() {
+                document.getElementById('room-preview').classList.remove('hidden');
+                document.getElementById('room-preview').classList.add('fade-in');
+            }
+            
+            window.saveRoom = function() {
+                // TODO: Implement room saving logic
+                alert('Room saved successfully!');
+                showDashboard();
+            };
+            
+            // Object Detection Functions
+            window.handleObjectUpload = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // TODO: Implement object detection processing
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('camera-preview').src = e.target.result;
+                        startObjectAnalysis();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            
+            window.captureObject = function() {
+                // TODO: Implement camera capture logic
+                startObjectAnalysis();
+            };
+            
+            function startObjectAnalysis() {
+                // Show scanning line animation
+                document.getElementById('scanning-line').classList.remove('hidden');
+                
+                // Simulate ML processing
+                setTimeout(() => {
+                    document.getElementById('scanning-line').classList.add('hidden');
+                    document.getElementById('detection-overlays').classList.remove('hidden');
+                    showDetectionResults();
+                }, 2000);
+            }
+            
+            function showDetectionResults() {
+                document.getElementById('detection-results').classList.remove('hidden');
+                document.getElementById('detection-results').classList.add('slide-up');
+            }
+            
+            window.startDetection = function() {
+                // TODO: Implement real-time detection
+                startObjectAnalysis();
+            };
+            
+            window.saveDetection = function() {
+                // TODO: Implement detection saving logic
+                alert('Objects saved successfully!');
+                showDashboard();
+            };
+            
+            window.retakePhoto = function() {
+                document.getElementById('detection-results').classList.add('hidden');
+                document.getElementById('detection-overlays').classList.add('hidden');
+            };
+            
+            window.showBatchUpload = function() {
+                // TODO: Implement batch upload functionality
+                alert('Batch upload feature coming soon!');
+            };
+            
+            // Search Functions
+            window.exportResults = function() {
+                // TODO: Implement export functionality
+                alert('Exporting search results...');
+            };
+            
+            // Initialize app
+            document.addEventListener('DOMContentLoaded', function() {
+                // Start with login screen
+                hideAllScreens();
+                document.getElementById('login-screen').classList.remove('hidden');
+                
+                // Hide navigation initially
+                document.querySelector('nav').style.display = 'none';
+            });
+            
+            // Show navigation when user logs in
+            window.addEventListener('load', function() {
+                const originalShowDashboard = window.showDashboard;
+                window.showDashboard = function() {
+                    document.querySelector('nav').style.display = 'block';
+                    originalShowDashboard();
+                };
+            });
+        })();
+    </script>
+</body>
+</html>

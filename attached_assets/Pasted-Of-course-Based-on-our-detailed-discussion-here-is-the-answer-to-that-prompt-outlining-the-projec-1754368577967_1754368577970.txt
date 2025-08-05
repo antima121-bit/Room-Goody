@@ -1,0 +1,50 @@
+Of course. Based on our detailed discussion, here is the answer to that prompt, outlining the project requirements.
+
+***
+
+Great! Here are the details for the project I want to build on Replit.
+
+### **What type of application or project you want to build?**
+
+I want to build a comprehensive, cross-platform mobile application for both iOS and Android called the **"Room Scanner & Object Detection App."**
+
+The core concept is to provide a powerful tool for interior designers, architects, or even home enthusiasts to digitally capture and catalog physical spaces and the objects within them. It should seamlessly blend room scanning technology with advanced, real-time object recognition.
+
+### **What features or functionality you need?**
+
+The application has three primary functional pillars:
+
+1.  **Room Layout Scanning:**
+    * Integrate with the **MagicPlan** app via deep links.
+    * Users will launch MagicPlan from my app to scan a room.
+    * After the scan, the app should receive the layout data (e.g., image, dimensions) via a callback.
+    * The user can then name the room, and the app will save the layout, timestamp, and metadata.
+
+2.  **Real-Time Object Detection:**
+    * Utilize the device's camera to capture images of objects (like furniture, electronics, decor).
+    * Process the captured image using **Firebase MLKit** to automatically detect:
+        * **Objects:** Identify what the item is (e.g., "chair," "television").
+        * **Text:** Recognize brands or labels on the object (e.g., "HP").
+        * **Colors:** Extract a dominant color palette.
+        * **Shapes:** Determine the basic shape (e.g., "rectangle").
+    * Tag each detection with high-precision GPS coordinates (e.g., a location in Sidhi, Madhya Pradesh).
+    * Store all this metadata in a structured JSON format.
+
+3.  **Advanced Search & Management:**
+    * A powerful search interface to filter all detected objects.
+    * Users must be able to search using multiple criteria combined with a logical AND (e.g., `brand: "HP"` + `color: "black"` + `city: "Sidhi"`).
+    * Dashboards to view and manage all saved room layouts and detected objects.
+
+4.  **User Authentication:**
+    * Login and Signup using Email/Password via **Supabase Auth**.
+    * A "Continue as Guest" option that allows anonymous use with data stored locally.
+
+### **Any specific requirements or preferences you have?**
+
+* **Primary Tech Stack:** The application must be built using **React Native with TypeScript**.
+* **Database:** A dual-storage approach is required:
+    * **Local:** **SQLite** for a complete offline-first experience. All features must work without an internet connection.
+    * **Remote:** **Supabase** (PostgreSQL, Storage, Auth) for cloud backup, user management, and data synchronization.
+* **UI/UX:** The user interface should be modern, clean, and highly intuitive. A "perfect user experience" is the goal, with smooth animations and a responsive design.
+* **Architecture:** The code should be highly modular, following the detailed structure we discussed previously (`src/screens`, `src/services`, `src/components`, etc.).
+* **Security:** Data must be secure, especially with Supabase, by implementing Row Level Security so users can only access their own data.

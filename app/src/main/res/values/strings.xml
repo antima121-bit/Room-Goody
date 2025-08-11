@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Smart Layout</string>
+    <string name="scan_room">Scan Room</string>
+    <string name="object_detection">Object Detection</string>
+    <string name="search">Search</string>
+</resources>
